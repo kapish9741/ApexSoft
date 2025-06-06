@@ -1,5 +1,5 @@
 import type React from "react"
-;('"use client')
+"use client"
 
 import { motion } from "motion/react"
 import { type RefObject, useEffect, useId, useState } from "react"
@@ -89,31 +89,25 @@ export const AnimatedBeam: React.FC<AnimatedBeamProps> = ({
         const d = `M ${startX},${startY} Q ${(startX + endX) / 2},${controlY} ${endX},${endY}`
         setPathD(d)
       } catch (error) {
-        console.warn("Error updating animated beam path:", error)
+        console.error("Error calculating animated beam path:", error)
       }
     }
 
     // Initialize ResizeObserver
-    const resizeObserver = new ResizeObserver((entries) => {
-      // For all entries, recalculate the path
-      for (const entry of entries) {
-        updatePath()
-      }
+    const resizeObserver = new ResizeObserver(() => {
+      updatePath()
     })
 
-    // Add a small delay to ensure refs are properly set
-    const timeoutId = setTimeout(() => {
-      updatePath()
+    // Observe the container element
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current)
+    }
 
-      // Observe the container element
-      if (containerRef?.current) {
-        resizeObserver.observe(containerRef.current)
-      }
-    }, 100)
+    // Call the updatePath initially to set the initial path
+    updatePath()
 
     // Clean up the observer on component unmount
     return () => {
-      clearTimeout(timeoutId)
       resizeObserver.disconnect()
     }
   }, [containerRef, fromRef, toRef, curvature, startXOffset, startYOffset, endXOffset, endYOffset])
