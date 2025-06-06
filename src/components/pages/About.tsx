@@ -46,6 +46,9 @@ const About = () => {
     <div className='w-screen flex flex-col items-center justify-center mt-20 gap-20'>
         <h1 className="text-4xl font-semibold bg-gradient-to-br from-neutral-500 via-neutral-300 to-neutral-700 bg-clip-text text-transparent">About Us</h1>
         <GlowingEffectDemo />
+        <p className="text-neutral-400 text-lg max-w-2xl text-center">
+            We are a team of passionate developers and designers dedicated to creating innovative software solutions that empower businesses and individuals to achieve their goals. Our mission is to deliver high-quality products that enhance productivity, streamline processes, and provide exceptional user experiences.</p>
+        <h3 className="text-2xl font-semibold text-neutral-100 text-center">What Our Customers Say</h3>
         <AnimatedTestimonials testimonials={testimonials} />
     </div>
   )
