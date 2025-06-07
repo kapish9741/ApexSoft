@@ -53,6 +53,11 @@ const About = () => {
       >
         About Us
       </motion.h1>
+      <p className="max-w-2xl text-center text-lg text-neutral-500 dark:text-neutral-400">
+        ApexSoft is a leading software development company with over 15 years of experience in delivering innovative solutions to Fortune 500 companies. Our team of expert developers specializes in creating cutting-edge applications that drive business success.
+        We leverage the latest technologies and methodologies to build scalable, secure, and high-performance software solutions tailored to meet the unique needs of our clients.
+      </p>
+      
       <GlowingEffectDemo />
       <motion.h2 
       className="text-4xl font-semibold bg-gradient-to-br from-neutral-500 via-neutral-300 to-neutral-700 bg-clip-text text-transparent"
