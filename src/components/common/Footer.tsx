@@ -4,7 +4,7 @@ function Footer() {
   return (
     <footer className="mt-20 bg-black text-neutral-400 py-12 px-6 sm:px-12 border-t border-neutral-800">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
-        
+
         <div>
           <h2 className="text-neutral-100 text-xl font-semibold">ApexSoft</h2>
           <p className="mt-2 text-sm">

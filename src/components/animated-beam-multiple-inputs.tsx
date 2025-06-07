@@ -1,9 +1,16 @@
 "use client";
 
-import React, { forwardRef, useRef } from "react";
+import React, { forwardRef, useRef, lazy, Suspense } from "react";
 
 import { cn } from "../lib/utils";
 import { AnimatedBeam } from "../registry/magicui/animated-beam";
+
+// Import the Globe component
+const World = lazy(() =>
+  import("./ui/globe").then((module) => ({
+    default: module.World,
+  }))
+);
 
 const Circle = forwardRef<
   HTMLDivElement,
@@ -38,6 +45,186 @@ export default function AnimatedBeamMultipleOutputDemo({
   const div6Ref = useRef<HTMLDivElement>(null);
   const div7Ref = useRef<HTMLDivElement>(null);
 
+  // Globe configuration
+  const globeConfig = {
+    pointSize: 2,
+    globeColor: "#03123d",
+    showAtmosphere: true,
+    atmosphereColor: "#8debf7",
+    atmosphereAltitude: 0.18,
+    emissive: "#0a84ff",
+    emissiveIntensity: 0.2,
+    shininess: 1.2,
+    polygonColor: "rgba(131, 219, 255, 0.85)",
+    ambientLight: "#a4cdfe",
+    directionalLeftLight: "#fff4cc",
+    directionalTopLight: "#c4f5ff",
+    pointLight: "#ffffff",
+    arcTime: 1000,
+    arcLength: 0.9,
+    rings: 1,
+    maxRings: 3,
+    initialPosition: { lat: 22.3193, lng: 114.1694 },
+    autoRotate: true,
+    autoRotateSpeed: 0.5,
+  };
+
+  // Sample arcs data for the Globe with more vibrant colors
+  const colors = [
+    "#06b6d4", "#3b82f6", "#6366f1",
+    "#8b5cf6", "#d946ef",
+    "#14b8a6", "#22d3ee",
+    "#f472b6", "#fb7185",
+    "#0ea5e9",
+  ];
+
+  const sampleArcs = [
+    {
+      order: 1,
+      startLat: -19.885592,
+      startLng: -43.951191,
+      endLat: -22.9068,
+      endLng: -43.1729,
+      arcAlt: 0.1,
+      color: colors[Math.floor(Math.random() * colors.length)],
+    },
+    {
+      order: 2,
+      startLat: 51.5072,
+      startLng: -0.1276,
+      endLat: 3.139,
+      endLng: 101.6869,
+      arcAlt: 0.3,
+      color: colors[Math.floor(Math.random() * colors.length)],
+    },
+    {
+      order: 3,
+      startLat: 1.3521,
+      startLng: 103.8198,
+      endLat: 35.6762,
+      endLng: 139.6503,
+      arcAlt: 0.2,
+      color: colors[Math.floor(Math.random() * colors.length)],
+    },
+    {
+      order: 4,
+      startLat: 40.7128,
+      startLng: -74.0060,
+      endLat: 48.8566,
+      endLng: 2.3522,
+      arcAlt: 0.2,
+      color: colors[Math.floor(Math.random() * colors.length)],
+    },
+    {
+      order: 5,
+      startLat: 33.8688,
+      startLng: 151.2093,
+      endLat: 19.0760,
+      endLng: 72.8777,
+      arcAlt: 0.25,
+      color: colors[Math.floor(Math.random() * colors.length)],
+    },
+    {
+      order: 6,
+      startLat: 39.9042,
+      startLng: 116.4074,
+      endLat: 55.7558,
+      endLng: 37.6173,
+      arcAlt: 0.3,
+      color: colors[Math.floor(Math.random() * colors.length)],
+    },
+    {
+      order: 7,
+      startLat: 25.2048,
+      startLng: 55.2708,
+      endLat: 30.0444,
+      endLng: 31.2357,
+      arcAlt: 0.15,
+      color: colors[Math.floor(Math.random() * colors.length)],
+    },
+    {
+      order: 8,
+      startLat: 33.9249,
+      startLng: 18.4241,
+      endLat: -22.9068,
+      endLng: -43.1729,
+      arcAlt: 0.35,
+      color: colors[Math.floor(Math.random() * colors.length)],
+    },
+    {
+      order: 9,
+      startLat: -33.8688,
+      startLng: 151.2093,
+      endLat: 37.7749,
+      endLng: -122.4194,
+      arcAlt: 0.28,
+      color: colors[Math.floor(Math.random() * colors.length)],
+    },
+    {
+      order: 10,
+      startLat: 37.7749,
+      startLng: -122.4194,
+      endLat: -34.6037,
+      endLng: -58.3816,
+      arcAlt: 0.22,
+      color: colors[Math.floor(Math.random() * colors.length)],
+    },
+    {
+      order: 11,
+      startLat: 55.7558,
+      startLng: 37.6173,
+      endLat: 31.2304,
+      endLng: 121.4737,
+      arcAlt: 0.18,
+      color: colors[Math.floor(Math.random() * colors.length)],
+    },
+    {
+      order: 12,
+      startLat: -6.2088,
+      startLng: 106.8456,
+      endLat: 35.6762,
+      endLng: 139.6503,
+      arcAlt: 0.27,
+      color: colors[Math.floor(Math.random() * colors.length)],
+    },
+    {
+      order: 13,
+      startLat: 28.6139,
+      startLng: 77.2090,
+      endLat: 1.3521,
+      endLng: 103.8198,
+      arcAlt: 0.16,
+      color: colors[Math.floor(Math.random() * colors.length)],
+    },
+    {
+      order: 14,
+      startLat: 59.3293,
+      startLng: 18.0686,
+      endLat: 41.9028,
+      endLng: 12.4964,
+      arcAlt: 0.12,
+      color: colors[Math.floor(Math.random() * colors.length)],
+    },
+    {
+      order: 15,
+      startLat: -33.4489,
+      startLng: -70.6693,
+      endLat: -12.0464,
+      endLng: -77.0428,
+      arcAlt: 0.14,
+      color: colors[Math.floor(Math.random() * colors.length)],
+    },
+    {
+      order: 16,
+      startLat: 51.1657,
+      startLng: 10.4515,
+      endLat: 35.6895,
+      endLng: 139.6917,
+      arcAlt: 0.33,
+      color: colors[Math.floor(Math.random() * colors.length)],
+    }
+  ];
+
   return (
     <div
       className={cn(
@@ -70,8 +257,13 @@ export default function AnimatedBeamMultipleOutputDemo({
           </Circle>
         </div>
         <div className="flex flex-col justify-center">
-          <Circle ref={div7Ref}>
-            <Icons.user />
+          {/* Replace the user icon with Globe */}
+          <Circle ref={div7Ref} className="size-32 p-0 overflow-hidden">
+            <div className="w-full h-full">
+              <Suspense fallback={<div className="text-white text-xs">Loading...</div>}>
+                <World data={sampleArcs} globeConfig={globeConfig} />
+              </Suspense>
+            </div>
           </Circle>
         </div>
       </div>
