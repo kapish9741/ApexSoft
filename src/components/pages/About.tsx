@@ -1,5 +1,8 @@
 import GlowingEffectDemo from '../GlowingEffectDemo'
-import {AnimatedTestimonials} from '../ui/animated-testimonials'
+import { AnimatedTestimonials } from '../ui/animated-testimonials'
+import { FAQAccordion } from '../ui/faq-accordion'
+import { faqData } from '../../data/faq-data'
+import { motion } from 'motion/react'
 
 
 const About = () => {
@@ -42,10 +45,36 @@ const About = () => {
   ];
   return (
     <div className='w-screen flex flex-col items-center justify-center mt-20 gap-20'>
-        <h1 className="text-4xl font-semibold bg-gradient-to-br from-neutral-500 via-neutral-300 to-neutral-700 bg-clip-text text-transparent">About Us</h1>
-        <GlowingEffectDemo />
-        <AnimatedTestimonials testimonials={testimonials}/>
+      <motion.h1
+        className="text-4xl font-semibold bg-gradient-to-br from-neutral-500 via-neutral-300 to-neutral-700 bg-clip-text text-transparent"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        About Us
+      </motion.h1>
+      <GlowingEffectDemo />
+      <motion.h2 
+      className="text-4xl font-semibold bg-gradient-to-br from-neutral-500 via-neutral-300 to-neutral-700 bg-clip-text text-transparent"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}>
+          Testimonials
+      </motion.h2>
+      <AnimatedTestimonials testimonials={testimonials} />
 
+      {/* New FAQ Section */}
+      <div className="w-full px-4 py-10 bg-black">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          viewport={{ once: true }}
+          className="w-full max-w-7xl mx-auto py-12 px-4"
+        >
+          <FAQAccordion items={faqData} />
+        </motion.div>
+      </div>
     </div>
   )
 }
