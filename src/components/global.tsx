@@ -1,5 +1,5 @@
 "use client";
-import React, { lazy, Suspense } from "react";
+import { lazy, Suspense } from "react";
 
 // Use React's lazy loading instead of Next.js dynamic import
 const World = lazy(() =>
