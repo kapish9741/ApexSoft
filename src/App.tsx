@@ -11,8 +11,7 @@ import Sponsers from './components/Sponsers';
 import About from './components/pages/About';
 import WorldMap from './components/WorldMap';
 import Contact from './components/pages/Contact';
-
-const Blog = () => <div className="p-10 text-white">Blog Page</div>;
+import Blog from './components/pages/Blog';
 
 function App() {
   return (

@@ -1,19 +1,19 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Color, Scene, Fog, PerspectiveCamera, Vector3 } from "three";
+import { Color, Scene, Fog, PerspectiveCamera, Vector3, Group, Material, MeshPhongMaterial } from "three";
 import ThreeGlobe from "three-globe";
 import { useThree, Canvas, extend } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
-import countries from "@/data/globe.json";
+import countries from "../../data/globe.json";
+
+// Fix Three-Fiber type extension
 declare module "@react-three/fiber" {
   interface ThreeElements {
-    threeGlobe: ThreeElements["mesh"] & {
-      new(): ThreeGlobe;
-    };
+    threeGlobe: any;
   }
 }
 
-extend({ ThreeGlobe: ThreeGlobe });
+extend({ ThreeGlobe });
 
 const RING_PROPAGATION_SPEED = 3;
 const aspect = 1;
@@ -60,11 +60,24 @@ interface WorldProps {
   data: Position[];
 }
 
-let numbersOfRings = [0];
+// Define interfaces for data types
+interface GlobePoint {
+  size: number;
+  order: number;
+  color: string;
+  lat: number;
+  lng: number;
+}
+
+interface RingData {
+  lat: number;
+  lng: number;
+  color: string;
+}
 
 export function Globe({ globeConfig, data }: WorldProps) {
   const globeRef = useRef<ThreeGlobe | null>(null);
-  const groupRef = useRef();
+  const groupRef = useRef<Group>(null); // Properly type the ref
   const [isInitialized, setIsInitialized] = useState(false);
 
   const defaultProps = {
@@ -88,7 +101,7 @@ export function Globe({ globeConfig, data }: WorldProps) {
   useEffect(() => {
     if (!globeRef.current && groupRef.current) {
       globeRef.current = new ThreeGlobe();
-      (groupRef.current as any).add(globeRef.current);
+      groupRef.current.add(globeRef.current);
       setIsInitialized(true);
     }
   }, []);
@@ -97,16 +110,19 @@ export function Globe({ globeConfig, data }: WorldProps) {
   useEffect(() => {
     if (!globeRef.current || !isInitialized) return;
 
-    const globeMaterial = globeRef.current.globeMaterial() as unknown as {
-      color: Color;
-      emissive: Color;
-      emissiveIntensity: number;
-      shininess: number;
-    };
-    globeMaterial.color = new Color(globeConfig.globeColor);
-    globeMaterial.emissive = new Color(globeConfig.emissive);
-    globeMaterial.emissiveIntensity = globeConfig.emissiveIntensity || 0.1;
-    globeMaterial.shininess = globeConfig.shininess || 0.9;
+    try {
+      // Use proper type for material
+      const globeMaterial = globeRef.current.globeMaterial() as MeshPhongMaterial;
+
+      if (globeMaterial) {
+        globeMaterial.color = new Color(globeConfig.globeColor || '#1d072e');
+        globeMaterial.emissive = new Color(globeConfig.emissive || '#000000');
+        globeMaterial.emissiveIntensity = globeConfig.emissiveIntensity || 0.1;
+        globeMaterial.shininess = globeConfig.shininess || 0.9;
+      }
+    } catch (error) {
+      console.error("Error setting globe material:", error);
+    }
   }, [
     isInitialized,
     globeConfig.globeColor,
@@ -119,75 +135,80 @@ export function Globe({ globeConfig, data }: WorldProps) {
   useEffect(() => {
     if (!globeRef.current || !isInitialized || !data) return;
 
-    const arcs = data;
-    let points = [];
-    for (let i = 0; i < arcs.length; i++) {
-      const arc = arcs[i];
-      const rgb = hexToRgb(arc.color) as { r: number; g: number; b: number };
-      points.push({
-        size: defaultProps.pointSize,
-        order: arc.order,
-        color: arc.color,
-        lat: arc.startLat,
-        lng: arc.startLng,
-      });
-      points.push({
-        size: defaultProps.pointSize,
-        order: arc.order,
-        color: arc.color,
-        lat: arc.endLat,
-        lng: arc.endLng,
-      });
-    }
+    try {
+      const arcs = data;
+      const points: GlobePoint[] = [];
 
-    // remove duplicates for same lat and lng
-    const filteredPoints = points.filter(
-      (v, i, a) =>
-        a.findIndex((v2) =>
-          ["lat", "lng"].every(
-            (k) => v2[k as "lat" | "lng"] === v[k as "lat" | "lng"],
-          ),
-        ) === i,
-    );
+      for (let i = 0; i < arcs.length; i++) {
+        const arc = arcs[i];
 
-    globeRef.current
-      .hexPolygonsData(countries.features)
-      .hexPolygonResolution(3)
-      .hexPolygonMargin(0.7)
-      .showAtmosphere(defaultProps.showAtmosphere)
-      .atmosphereColor(defaultProps.atmosphereColor)
-      .atmosphereAltitude(defaultProps.atmosphereAltitude)
-      .hexPolygonColor(() => defaultProps.polygonColor);
+        points.push({
+          size: defaultProps.pointSize,
+          order: arc.order,
+          color: arc.color,
+          lat: arc.startLat,
+          lng: arc.startLng,
+        });
+        points.push({
+          size: defaultProps.pointSize,
+          order: arc.order,
+          color: arc.color,
+          lat: arc.endLat,
+          lng: arc.endLng,
+        });
+      }
 
-    globeRef.current
-      .arcsData(data)
-      .arcStartLat((d) => (d as { startLat: number }).startLat * 1)
-      .arcStartLng((d) => (d as { startLng: number }).startLng * 1)
-      .arcEndLat((d) => (d as { endLat: number }).endLat * 1)
-      .arcEndLng((d) => (d as { endLng: number }).endLng * 1)
-      .arcColor((e: any) => (e as { color: string }).color)
-      .arcAltitude((e) => (e as { arcAlt: number }).arcAlt * 1)
-      .arcStroke(() => [0.32, 0.28, 0.3][Math.round(Math.random() * 2)])
-      .arcDashLength(defaultProps.arcLength)
-      .arcDashInitialGap((e) => (e as { order: number }).order * 1)
-      .arcDashGap(15)
-      .arcDashAnimateTime(() => defaultProps.arcTime);
-
-    globeRef.current
-      .pointsData(filteredPoints)
-      .pointColor((e) => (e as { color: string }).color)
-      .pointsMerge(true)
-      .pointAltitude(0.0)
-      .pointRadius(2);
-
-    globeRef.current
-      .ringsData([])
-      .ringColor(() => defaultProps.polygonColor)
-      .ringMaxRadius(defaultProps.maxRings)
-      .ringPropagationSpeed(RING_PROPAGATION_SPEED)
-      .ringRepeatPeriod(
-        (defaultProps.arcTime * defaultProps.arcLength) / defaultProps.rings,
+      // remove duplicates for same lat and lng
+      const filteredPoints = points.filter(
+        (v, i, a) =>
+          a.findIndex((v2) =>
+            ["lat", "lng"].every(
+              (k) => v2[k as keyof typeof v2] === v[k as keyof typeof v],
+            ),
+          ) === i,
       );
+
+      globeRef.current
+        .hexPolygonsData(countries.features)
+        .hexPolygonResolution(3)
+        .hexPolygonMargin(0.7)
+        .showAtmosphere(defaultProps.showAtmosphere)
+        .atmosphereColor(defaultProps.atmosphereColor)
+        .atmosphereAltitude(defaultProps.atmosphereAltitude)
+        .hexPolygonColor(() => defaultProps.polygonColor);
+
+      globeRef.current
+        .arcsData(data)
+        .arcStartLat((d: Position) => d.startLat * 1)
+        .arcStartLng((d: Position) => d.startLng * 1)
+        .arcEndLat((d: Position) => d.endLat * 1)
+        .arcEndLng((d: Position) => d.endLng * 1)
+        .arcColor((e: Position) => e.color)
+        .arcAltitude((e: Position) => e.arcAlt * 1)
+        .arcStroke(() => [0.32, 0.28, 0.3][Math.round(Math.random() * 2)])
+        .arcDashLength(defaultProps.arcLength)
+        .arcDashInitialGap((e: Position) => e.order * 1)
+        .arcDashGap(15)
+        .arcDashAnimateTime(() => defaultProps.arcTime);
+
+      globeRef.current
+        .pointsData(filteredPoints)
+        .pointColor((e: GlobePoint) => e.color)
+        .pointsMerge(true)
+        .pointAltitude(0.0)
+        .pointRadius(2);
+
+      globeRef.current
+        .ringsData([])
+        .ringColor((e: RingData) => e.color)
+        .ringMaxRadius(defaultProps.maxRings)
+        .ringPropagationSpeed(RING_PROPAGATION_SPEED)
+        .ringRepeatPeriod(
+          (defaultProps.arcTime * defaultProps.arcLength) / defaultProps.rings,
+        );
+    } catch (error) {
+      console.error("Error building globe data:", error);
+    }
   }, [
     isInitialized,
     data,
@@ -209,21 +230,25 @@ export function Globe({ globeConfig, data }: WorldProps) {
     const interval = setInterval(() => {
       if (!globeRef.current) return;
 
-      const newNumbersOfRings = genRandomNumbers(
-        0,
-        data.length,
-        Math.floor((data.length * 4) / 5),
-      );
+      try {
+        const newNumbersOfRings = genRandomNumbers(
+          0,
+          data.length,
+          Math.floor((data.length * 4) / 5),
+        );
 
-      const ringsData = data
-        .filter((d, i) => newNumbersOfRings.includes(i))
-        .map((d) => ({
-          lat: d.startLat,
-          lng: d.startLng,
-          color: d.color,
-        }));
+        const ringsData = data
+          .filter((d, i) => newNumbersOfRings.includes(i))
+          .map((d) => ({
+            lat: d.startLat,
+            lng: d.startLng,
+            color: d.color,
+          }));
 
-      globeRef.current.ringsData(ringsData);
+        globeRef.current.ringsData(ringsData);
+      } catch (error) {
+        console.error("Error updating rings:", error);
+      }
     }, 2000);
 
     return () => {
@@ -231,7 +256,7 @@ export function Globe({ globeConfig, data }: WorldProps) {
     };
   }, [isInitialized, data]);
 
-  return <group ref={groupRef} />;
+  return <group ref={groupRef as React.RefObject<Group>} />;
 }
 
 export function WebGLRendererConfig() {
@@ -273,8 +298,8 @@ export function World(props: WorldProps) {
         enableZoom={false}
         minDistance={cameraZ}
         maxDistance={cameraZ}
-        autoRotateSpeed={1}
-        autoRotate={true}
+        autoRotateSpeed={globeConfig.autoRotateSpeed || 1}
+        autoRotate={globeConfig.autoRotate !== false}
         minPolarAngle={Math.PI / 3.5}
         maxPolarAngle={Math.PI - Math.PI / 3}
       />
@@ -283,12 +308,12 @@ export function World(props: WorldProps) {
 }
 
 export function hexToRgb(hex: string) {
-  var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-  hex = hex.replace(shorthandRegex, function (m, r, g, b) {
+  const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+  hex = hex.replace(shorthandRegex, function (_, r, g, b) {
     return r + r + g + g + b + b;
   });
 
-  var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result
     ? {
       r: parseInt(result[1], 16),
